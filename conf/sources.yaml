@@ -1,0 +1,76 @@
+# 소스별 엔드포인트, 호출 상한, 해시에서 제외할 변동 필드. 근거: docs/00 0.4, docs/03.
+#
+# 규칙
+# - 비밀값을 넣지 않는다. API 키는 .env에 두고 여기에는 환경변수 이름만 적는다.
+# - docs/03에서 🔵가 아니고 docs/gate-results.md에서 PASS가 아닌 값은
+#   줄 끝에 "# UNVERIFIED"를 붙인다. 게이트를 통과하면 표시를 지운다.
+# - null은 "아직 정하지 않음"이다. 로더는 null을 기본값으로 바꾸지 않고 실패해야 한다.
+# - 값은 P5(defaults), P6(krx), P10(dart), P11(ecos), P14(manual, datago)에서 채운다.
+#   지금은 키 구조만 있는 초안이며 P5에서 구조가 바뀔 수 있다.
+version: 1
+
+defaults:
+  timeout:
+    connect_seconds: null
+    read_seconds: null
+  retry:                          # transient에만 적용한다
+    max_attempts: null
+    backoff_min_seconds: null
+    backoff_max_seconds: null
+  heartbeat_stale_minutes: null   # 초과한 running은 failed(transient)로 정리한다
+
+sources:
+  krx:
+    api_key_env: KRX_API_KEY
+    base_url: null
+    pool: krx_api                 # docker/airflow/pools.json의 이름과 같아야 한다
+    quota:
+      hard_limit_per_day: null    # meta.api_quota_policy.hard_limit
+      soft_limit_per_day: null    # meta.api_quota_policy.soft_limit
+      per_minute: null
+      backfill_share: null        # meta.fn_reserve_quota의 p_share
+    timeout: {}                   # defaults.timeout 재정의
+    recheck:
+      open_days: null             # 최근 N개장일 재확인
+    not_ready:
+      grace_time_kst: null        # 대상일 다음 평일의 유예 시각. 이후에도 비면 휴장으로 본다
+      poke_interval_seconds: null
+      timeout_seconds: null
+    volatile_fields: []           # 해시 전에 제거할 응답 필드
+    endpoints: {}                 # 이름: {path, params}
+
+  dart:
+    api_key_env: DART_API_KEY
+    base_url: null
+    pool: dart_api
+    quota:
+      hard_limit_per_day: null
+      soft_limit_per_day: null
+      per_minute: null
+      backfill_share: null
+    timeout: {}
+    recheck:
+      list_days: null             # list.json 최근 N일 재확인 (rm 변화 감지)
+    volatile_fields: []
+    endpoints: {}
+
+  ecos:
+    api_key_env: ECOS_API_KEY
+    base_url: null
+    pool: ecos_api
+    quota:
+      hard_limit_per_day: null
+      soft_limit_per_day: null
+      per_minute: null
+      backfill_share: null
+    timeout: {}
+    volatile_fields: []
+    endpoints: {}
+
+  datago:                         # 보조 소스. G4 통과 전에는 쓰지 않는다
+    api_key_env: DATAGO_API_KEY
+    base_url: null
+    endpoints: {}
+
+  manual:                         # 수동 파일 (KRX 상장폐지 목록 등). 호출이 없다
+    input_dir: null

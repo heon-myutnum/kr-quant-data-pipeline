@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kr-quant-data-pipeline"
+version = "0.1.0.dev0"
+description = "KRX, OpenDART, ECOS 데이터를 point-in-time 일별 데이터셋으로 만드는 파이프라인"
+# 컨테이너 이미지가 apache/airflow:*-python3.12라서 로컬도 3.12로 고정한다.
+requires-python = ">=3.12,<3.13"
+# 런타임 의존성은 코드가 처음 필요로 하는 PR에서 추가한다.
+# 버전은 Airflow constraints(docker/airflow/requirements.txt)와 맞춘다.
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+    "nbstripout>=0.7",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers", "--strict-config", "--import-mode=importlib"]
+# tests/<이름>/ 아래 테스트는 tests/conftest.py가 같은 이름의 marker를 자동으로 붙인다.
+markers = [
+    "unit: DB와 네트워크 없이 실행한다",
+    "integration: PostgreSQL이 필요하다",
+    "pit: truncation, 재생성 지문 테스트",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+# DTZ: 시간대 없는 datetime 금지 (KST 기준 날짜 계산이 실행 환경에 따라 달라지는 것을 막는다)
+select = ["E", "F", "W", "I", "UP", "B", "DTZ"]
