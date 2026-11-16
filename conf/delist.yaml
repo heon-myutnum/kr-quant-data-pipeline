@@ -1,0 +1,23 @@
+# 폐지 수익률 가정값. 근거: docs/00 0.5 "폐지 수익률" 표. 값은 P14에서 채운다.
+#
+# 규칙
+# - 여기 값은 사실이 아니라 가정이다. 리서치에서 값을 바꿔 민감도를 확인한다.
+# - 수익률은 -1 이상이다 (mart.fact_delisting.delist_return의 CHECK와 같다).
+# - null은 "아직 정하지 않음"이다. 로더는 null을 기본값으로 바꾸지 않고 실패해야 한다.
+version: 1
+
+# distress이고 정리매매가 없을 때의 가정 수익률 (return_basis = assumed)
+distress_return: null
+
+# distress이고 정리매매가 있을 때, 정리매매 종가 이후에 더하는 추가 손실
+distress_extra_loss_after_arrangement: null
+
+# 공식 폐지 목록에 없는 종목에 last_seen 폐지일을 주는 조건
+last_seen:
+  min_absent_open_days: null      # 이 개장일 수 이상 시세에 없을 때만 부여한다
+
+# 폐지 사유 문자열 → reason_group 분류 규칙. 위에서부터 처음 맞는 규칙을 쓴다.
+# 어느 것도 맞지 않으면 unknown으로 두고 리포트한다.
+#   - reason_group: distress | merger_cash | merger_stock | voluntary | other
+#     patterns: []
+reason_rules: []

@@ -1,0 +1,21 @@
+# 품질 규칙 선언. 카탈로그: docs/08. meta.dq_rule로 동기화한다 (P13).
+#
+# 규칙
+# - 규칙 1건의 SQL은 sql/checks/<rule_id>.sql 하나이고 위반 행을 반환한다.
+# - 임계값은 params에만 둔다. SQL과 코드에 숫자를 쓰지 않는다.
+# - 오탐은 enabled를 끄지 않고 meta.dq_exception에 사유와 승인자를 남긴다.
+# - null은 "아직 정하지 않음"이다. 로더는 null을 기본값으로 바꾸지 않고 실패해야 한다.
+version: 1
+
+defaults:
+  quarantine_block_ratio: null    # 대상일 격리 비율이 이 값을 넘으면 빌드를 막는다
+  sample_limit: null              # meta.dq_result.sample에 남길 최대 행 수
+
+# 항목 형식 (meta.dq_rule의 컬럼과 같다)
+#   - rule_id: R-XX-00
+#     target: <스키마.테이블>
+#     severity: warn | quarantine | block
+#     description: <한 줄>
+#     params: {}
+#     enabled: true
+rules: []

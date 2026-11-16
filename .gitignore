@@ -1,0 +1,39 @@
+# ---- 비밀값 ----
+.env
+.env.*
+!.env.example
+
+# ---- 데이터, Airflow 마운트 (docs/01). 앞의 /는 레포 루트만 가리킨다 ----
+/data/
+/logs/
+/config/
+/plugins/
+
+# ---- 원천 데이터가 다른 경로에 놓이는 사고 방지 (재배포 금지) ----
+*.parquet
+*.arrow
+*.feather
+*.duckdb
+*.dump
+*.dump.sha256
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ---- Jupyter ----
+.ipynb_checkpoints/
+
+# ---- 편집기, OS ----
+.idea/
+.vscode/
+.DS_Store
