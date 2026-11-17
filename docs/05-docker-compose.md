@@ -2,7 +2,7 @@
 
 `docs/05-docker-compose.md`. Airflow 3.3.2 공식 `docker-compose.yaml`을 기반으로 프로젝트에 맞게 줄였습니다.
 
-> **검증 범위**: `docker compose config` 문법과 의존 관계, `.env` 누락 시 실패 동작을 확인했습니다. 별도 가상환경의 Airflow 3.3.2에서 `pools.json` 가져오기, DAG 파싱, 수동 실행을 확인했습니다 (Python 3.13). Docker Hub에 접근할 수 없어 **이미지 빌드와 실제 기동은 미검증**입니다. `3.3.2-python3.12` 태그는 이슈 #4에서 확인합니다. Airflow 3.4.0은 RC 단계라 3.3.2에 고정합니다.
+> **검증 범위**: `docker compose config` 문법과 의존 관계, `.env` 누락 시 실패 동작을 확인했습니다. 별도 가상환경의 Airflow 3.3.2에서 `pools.json` 가져오기, DAG 파싱, 수동 실행을 확인했습니다 (Python 3.13). 2026-11-17 WSL2 Ubuntu에서 이미지 빌드, 기동, healthcheck DAG 실행, 백업까지 확인했습니다 (이슈 #4). Airflow 3.4.0이 출시됐지만 검증된 3.3.2에 고정합니다.
 
 ## 공식 파일 대비 변경점
 
@@ -17,6 +17,7 @@
 | `warehouse-migrate` 단발 서비스 추가 | initdb는 빈 볼륨에서 1회만 실행되어 V0002 이후를 적용할 수 없음 |
 | `airflow-init`에서 pool 가져오기 | UI 수동 설정 제거, 재현 가능 |
 | `chown`을 마지막에 실행 | root가 만든 설정·로그 파일의 소유권 문제 방지 (공식 파일과 같은 순서) |
+| pool 가져오기도 `/entrypoint` 경유 | root는 entrypoint 없이 `airflow` 모듈을 찾지 못함 |
 | `backup` 프로파일 서비스 | raw는 다시 받을 수 없는 원본 |
 
 ## `docker-compose.yaml`
@@ -125,7 +126,7 @@ services:
         mkdir -p /opt/airflow/{logs,dags,plugins,config,data}
         /entrypoint airflow version
         /entrypoint airflow config list >/dev/null
-        airflow pools import /opt/airflow/pools.json
+        /entrypoint airflow pools import /opt/airflow/pools.json
         chown -R "${AIRFLOW_UID:-50000}:0" /opt/airflow/{logs,dags,plugins,config,data}
     environment:
       <<: *airflow-common-env
@@ -193,7 +194,7 @@ services:
         f=/backup/quant-$$(date +%Y%m%d-%H%M%S).dump
         pg_dump -h warehouse-db -U quant -d quant -Fc -f "$$f"
         pg_restore --list "$$f" >/dev/null
-        sha256sum "$$f" > "$$f.sha256"
+        (cd /backup && sha256sum "$$(basename "$$f")" > "$$f.sha256")
         echo "backup ok: $$f"
     depends_on:
       warehouse-db:
@@ -265,6 +266,8 @@ DATAGO_API_KEY=
 # Docker 볼륨 밖의 절대 경로
 BACKUP_DIR=
 ```
+
+`BACKUP_DIR`이 비어 있으면 ops 프로파일을 쓰지 않아도 모든 compose 명령이 실패합니다.
 
 ## 마이그레이션 실행기
 
@@ -340,7 +343,7 @@ docker compose ps
 ```
 
 - Airflow UI: <http://localhost:8080>
-- 웨어하우스: `psql -h localhost -p 5433 -U quant quant`
+- 웨어하우스: `make psql` (컨테이너 안 psql을 쓰므로 호스트 설치가 필요 없습니다)
 - 백업: `docker compose --profile ops run --rm backup`
 - 웨어하우스 초기화: `docker compose down` 후 `docker volume rm <project>_warehouse-db-volume`. **수집 데이터가 삭제되고 `observed` 이력은 복구할 수 없습니다. 먼저 백업합니다.**
 

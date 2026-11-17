@@ -1,0 +1,6 @@
+apache-airflow-providers-postgres
+pandas
+pyarrow
+requests
+tenacity
+duckdb==2.0.0

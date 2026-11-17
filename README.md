@@ -33,7 +33,30 @@ flowchart LR
 
 ## 실행 방법
 
-> TODO: v0.1.0 완료 시 실제 동작을 확인한 명령으로 채웁니다.
+Docker 환경 기동까지 확인했습니다 (WSL2 Ubuntu, 2026-11-17). 수집 DAG 실행 절차는 v0.1.0 완료 시 추가합니다.
+
+```bash
+cp .env.example .env        # 값 입력. 비밀번호는 영문, 숫자만. BACKUP_DIR은 절대 경로 (비우면 모든 compose 명령이 실패)
+mkdir -p logs config plugins data
+docker compose build
+docker compose up airflow-init     # "exited with code 0" 확인
+docker compose up -d
+docker compose ps -a               # 상시 서비스 5개 healthy, airflow-init과 warehouse-migrate는 exited 0
+```
+
+- Airflow UI: <http://localhost:8080> (계정은 `.env`의 `AIRFLOW_ADMIN_USER`, `AIRFLOW_ADMIN_PASSWORD`)
+- 연결 확인 DAG:
+
+```bash
+docker compose exec airflow-scheduler airflow dags unpause -y healthcheck
+docker compose exec airflow-scheduler airflow dags trigger healthcheck
+docker compose exec airflow-scheduler airflow dags list-runs healthcheck   # state: success
+```
+
+- 웨어하우스 접속: `make psql`
+- 마이그레이션: `make migrate`
+- 백업: `make backup` (`BACKUP_DIR`에 덤프와 sha256 파일 생성)
+- 종료: `make down` (데이터 볼륨은 유지됩니다)
 
 ## 마일스톤
 
