@@ -1,0 +1,5 @@
+{
+  "krx_api":  {"slots": 2, "description": "KRX Open API", "include_deferred": false},
+  "dart_api": {"slots": 4, "description": "OpenDART", "include_deferred": false},
+  "ecos_api": {"slots": 2, "description": "ECOS", "include_deferred": false}
+}
